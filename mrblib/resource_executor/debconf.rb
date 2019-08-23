@@ -38,6 +38,20 @@ module ::MItamae
             end
           end
 
+          if attributes.vtype == 'password'
+            result = run_command("echo 'get #{attributes.question}' | debconf-communicate", error: false)
+            if result.success?
+              case result.stdout.chomp
+              when /\A(\d+)(?:\s*)?(.*)(?:\s*)?\z/
+                @@debconf[attributes.package][attributes.question][:value] = $2
+              else
+                raise NotImplementedError, "[Debconf::#{attributes.package}] Communicate Regex Error"
+              end
+            else
+              raise NotImplementedError, "[Debconf::#{attributes.package}] Communicate Status Error"
+            end
+          end
+
           case action
           when :set
             current.exists = false
